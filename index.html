@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#082d3c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mijn Uitgaven">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Mijn Uitgaven</title>
+  <style>
+    :root { --navy:#082d3c; --bg:#f3f6f7; --card:#fff; --muted:#62747b; --line:#dce4e7; --accent:#167d8d; --danger:#a92f37; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:#16262c; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+    header { background:var(--navy); color:white; padding:calc(18px + env(safe-area-inset-top)) 18px 20px; }
+    header h1 { margin:0 0 5px; font-size:24px; } header p { margin:0; opacity:.85; font-size:13px; }
+    main { max-width:700px; margin:0 auto; padding:16px; }
+    .total { background:var(--navy); color:#fff; border-radius:18px; padding:18px; margin-bottom:14px; }
+    .total .label { opacity:.8; font-size:13px; } .total .amount { font-size:32px; font-weight:750; margin:5px 0 12px; }
+    .row { display:flex; gap:10px; align-items:center; } .row > * { flex:1; min-width:0; }
+    .panel { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; }
+    h2 { font-size:17px; margin:0 0 13px; }
+    label { display:block; font-size:13px; font-weight:650; margin:11px 0 5px; }
+    input,select,textarea,button { font:inherit; }
+    input,select,textarea { width:100%; border:1px solid #cbd7db; border-radius:10px; padding:12px; background:#fff; color:#17282e; }
+    button { border:0; border-radius:11px; padding:12px 14px; background:var(--accent); color:white; font-weight:700; cursor:pointer; }
+    button.secondary { background:#e7eff1; color:var(--navy); } button.danger { background:#f8e9ea; color:var(--danger); }
+    .small { font-size:12px; color:var(--muted); line-height:1.45; }
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .stat { background:#f5f8f9; border-radius:12px; padding:12px; } .stat span { display:block; color:var(--muted); font-size:12px; } .stat strong { display:block; margin-top:4px; font-size:18px; }
+    .expense { display:flex; justify-content:space-between; gap:12px; border-top:1px solid var(--line); padding:12px 0; }
+    .expense:first-child { border-top:0; } .expense .desc { font-weight:650; overflow-wrap:anywhere; } .expense .meta { color:var(--muted); font-size:12px; margin-top:3px; }
+    .expense .right { text-align:right; white-space:nowrap; } .expense .price { font-weight:750; }
+    .expense button { margin-top:6px; padding:6px 9px; font-size:12px; }
+    .category-row { display:flex; justify-content:space-between; gap:8px; font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); }
+    .category-row:last-child { border-bottom:0; }
+    .bar { height:7px; background:#e7eef0; border-radius:9px; overflow:hidden; margin-top:5px; } .bar > div { height:100%; background:var(--accent); }
+    .hidden { display:none !important; }
+    footer { text-align:center; padding:4px 20px 20px; }
+    @media(min-width:620px){ .columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;} }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Mijn Uitgaven</h1>
+  <p>Jouw persoonlijke overzicht · gegevens blijven op dit toestel</p>
+</header>
+<main>
+  <section class="total">
+    <div class="label">Uitgaven in <span id="monthTitle"></span></div>
+    <div class="amount" id="monthTotal">€ 0,00</div>
+    <div class="row">
+      <div><label for="monthPicker" style="margin:0 0 5px;color:white">Maand bekijken</label><input id="monthPicker" type="month" style="color:#17282e"></div>
+      <div><label for="budgetInput" style="margin:0 0 5px;color:white">Maandbudget (€)</label><input id="budgetInput" type="number" min="0" step="0.01" placeholder="Bijv. 2500" inputmode="decimal" style="color:#17282e"></div>
+    </div>
+    <div class="small" id="budgetStatus" style="color:#e4eef1;margin-top:9px"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Nieuwe uitgave</h2>
+    <form id="expenseForm">
+      <div class="row">
+        <div><label for="amount">Bedrag (€) *</label><input id="amount" type="number" min="0.01" step="0.01" required placeholder="0,00" inputmode="decimal"></div>
+        <div><label for="date">Datum *</label><input id="date" type="date" required></div>
+      </div>
+      <label for="category">Categorie *</label>
+      <select id="category" required>
+        <option>Boodschappen</option><option>Wonen</option><option>Auto en vervoer</option><option>Restaurants</option><option>Gezondheid</option><option>Hobby en sport</option><option>Kledij</option><option>Abonnementen</option><option>Vakantie</option><option>Overige</option>
+      </select>
+      <label for="description">Omschrijving</label>
+      <input id="description" maxlength="120" placeholder="Bijv. wekelijkse boodschappen">
+      <label for="payment">Betaalmethode</label>
+      <select id="payment"><option>Bankkaart</option><option>Kredietkaart</option><option>Cash</option><option>Overschrijving</option><option>Andere</option></select>
+      <button type="submit" style="width:100%;margin-top:15px">Uitgave toevoegen</button>
+    </form>
+  </section>
+
+  <div class="columns">
+    <section class="panel">
+      <h2>Overzicht</h2>
+      <div class="stats">
+        <div class="stat"><span>Aantal uitgaven</span><strong id="count">0</strong></div>
+        <div class="stat"><span>Gemiddeld per uitgave</span><strong id="average">€ 0,00</strong></div>
+      </div>
+      <h2 style="margin-top:18px">Per categorie</h2>
+      <div id="categorySummary" class="small">Nog geen uitgaven in deze maand.</div>
+    </section>
+    <section class="panel">
+      <h2>Uitgavenlijst</h2>
+      <div id="expenseList" class="small">Nog geen uitgaven in deze maand.</div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h2>Gegevens en privacy</h2>
+    <p class="small">Deze versie bewaart je uitgaven in de lokale browseropslag op dit toestel. Er is geen account, bankkoppeling, cloudsync, reclame of analytics. Wis je browsergegevens of verwijder je lokale websitegegevens, dan kunnen je uitgaven verdwijnen. Maak daarom regelmatig een back-up.</p>
+    <div class="row">
+      <button id="exportBtn" type="button" class="secondary">Back-up maken</button>
+      <button id="importBtn" type="button" class="secondary">Back-up terugzetten</button>
+    </div>
+    <input id="importFile" class="hidden" type="file" accept="application/json,.json">
+    <button id="deleteAllBtn" type="button" class="danger" style="width:100%;margin-top:10px">Alle uitgaven verwijderen</button>
+    <p class="small" style="margin-bottom:0">Bewaar een back-up op een veilige plek. Het exportbestand bevat je financiële gegevens en is niet automatisch versleuteld.</p>
+  </section>
+</main>
+<footer class="small">Mijn Uitgaven · lokaal op je toestel</footer>
+<script>
+(() => {
+  const KEY = "mijn-uitgaven-v1";
+  const BUDGET_KEY = "mijn-uitgaven-budget-v1";
+  const $ = id => document.getElementById(id);
+  const today = new Date();
+  const localDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const monthOf = date => date.slice(0,7);
+  const money = n => new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}).format(n || 0);
+  let expenses = loadExpenses();
+
+  function loadExpenses() {
+    try {
+      const data = JSON.parse(localStorage.getItem(KEY) || "[]");
+      return Array.isArray(data) ? data : [];
+    } catch { return []; }
+  }
+  function save() { localStorage.setItem(KEY, JSON.stringify(expenses)); }
+  function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function selectedMonth() { return $('monthPicker').value || monthOf(localDate(today)); }
+  function monthExpenses() { return expenses.filter(e => monthOf(e.date) === selectedMonth()).sort((a,b) => b.date.localeCompare(a.date) || b.createdAt-a.createdAt); }
+  function render() {
+    const month = selectedMonth();
+    const entries = monthExpenses();
+    const total = entries.reduce((sum,e) => sum + Number(e.amount),0);
+    $('monthTitle').textContent = new Date(month + '-02').toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+    $('monthTotal').textContent = money(total);
+    $('count').textContent = entries.length;
+    $('average').textContent = money(entries.length ? total/entries.length : 0);
+    const budget = Number(localStorage.getItem(BUDGET_KEY + ':' + month) || 0);
+    $('budgetInput').value = budget || '';
+    $('budgetStatus').textContent = budget > 0 ? (total <= budget ? `Je hebt nog ${money(budget-total)} van je budget over.` : `Je zit ${money(total-budget)} boven je budget.`) : 'Stel een maandbudget in om je uitgaven op te volgen.';
+    const groups = {};
+    entries.forEach(e => groups[e.category] = (groups[e.category] || 0) + Number(e.amount));
+    const categories = Object.entries(groups).sort((a,b)=>b[1]-a[1]);
+    $('categorySummary').innerHTML = categories.length ? categories.map(([name,value]) =>
+      `<div class="category-row"><div style="flex:1">${escapeHtml(name)}<div class="bar"><div style="width:${total ? Math.max(2,value/total*100) : 0}%"></div></div></div><strong>${money(value)}</strong></div>`
+    ).join('') : 'Nog geen uitgaven in deze maand.';
+    $('expenseList').innerHTML = entries.length ? entries.map(e =>
+      `<div class="expense"><div><div class="desc">${escapeHtml(e.description || e.category)}</div><div class="meta">${escapeHtml(e.date)} · ${escapeHtml(e.category)} · ${escapeHtml(e.payment || '')}</div>${e.description ? `<div class="meta">${escapeHtml(e.category)}</div>` : ''}</div><div class="right"><div class="price">${money(Number(e.amount))}</div><button type="button" class="danger" data-delete="${escapeHtml(e.id)}">Verwijder</button></div></div>`
+    ).join('') : 'Nog geen uitgaven in deze maand.';
+  }
+  $('monthPicker').value = monthOf(localDate(today));
+  $('date').value = localDate(today);
+  $('expenseForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const amount = Number($('amount').value);
+    if (!Number.isFinite(amount) || amount <= 0) return alert('Vul een geldig bedrag in.');
+    expenses.push({id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random()), amount: Math.round(amount*100)/100, date:$('date').value, category:$('category').value, description:$('description').value.trim(), payment:$('payment').value, createdAt:Date.now()});
+    save();
+    $('monthPicker').value = monthOf($('date').value);
+    $('amount').value = ''; $('description').value = '';
+    render();
+  });
+  $('monthPicker').addEventListener('change', render);
+  $('budgetInput').addEventListener('change', () => {
+    const val = Math.max(0, Number($('budgetInput').value) || 0);
+    localStorage.setItem(BUDGET_KEY + ':' + selectedMonth(), String(val));
+    render();
+  });
+  $('expenseList').addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-delete]');
+    if (!btn) return;
+    if (confirm('Deze uitgave verwijderen?')) {
+      expenses = expenses.filter(e => e.id !== btn.dataset.delete);
+      save(); render();
+    }
+  });
+  $('exportBtn').addEventListener('click', () => {
+    const backup = {format:'mijn-uitgaven-backup-v1', exportedAt:new Date().toISOString(), expenses, budgets:Object.keys(localStorage).filter(k=>k.startsWith(BUDGET_KEY+':')).reduce((o,k)=>(o[k]=localStorage.getItem(k),o),{})};
+    const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`mijn-uitgaven-backup-${localDate(today)}.json`; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
+  $('importBtn').addEventListener('click', ()=>$('importFile').click());
+  $('importFile').addEventListener('change', async ev => {
+    const file = ev.target.files[0]; if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (data.format !== 'mijn-uitgaven-backup-v1' || !Array.isArray(data.expenses)) throw new Error('Ongeldig back-upbestand');
+      if (!confirm('De huidige uitgaven worden vervangen door de inhoud van de back-up. Doorgaan?')) return;
+      expenses = data.expenses; save();
+      Object.keys(localStorage).filter(k=>k.startsWith(BUDGET_KEY+':')).forEach(k=>localStorage.removeItem(k));
+      Object.entries(data.budgets || {}).forEach(([k,v])=>{if(k.startsWith(BUDGET_KEY+':'))localStorage.setItem(k,v)});
+      render(); alert('Back-up teruggezet.');
+    } catch (err) { alert('De back-up kon niet worden ingelezen. Controleer of je het juiste bestand hebt gekozen.'); }
+    finally { ev.target.value=''; }
+  });
+  $('deleteAllBtn').addEventListener('click', () => {
+    if (confirm('Weet je zeker dat je ALLE uitgaven en budgetten van deze app wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+      expenses=[]; save();
+      Object.keys(localStorage).filter(k=>k.startsWith(BUDGET_KEY+':')).forEach(k=>localStorage.removeItem(k));
+      render();
+    }
+  });
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
+  render();
+})();
+</script>
+</body>
+</html>

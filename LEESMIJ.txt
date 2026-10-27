@@ -1,0 +1,17 @@
+MIJN UITGAVEN — iPhone-webapp (eerste versie)
+
+Inhoud:
+- index.html: de app
+- manifest.json: instellingen voor installeren als webapp
+- sw.js: cache voor offline openen nadat de app minstens één keer online geladen is
+- icon-192.png en icon-512.png: app-iconen
+
+Privacy:
+- Uitgaven en budgetten worden opgeslagen in localStorage in de browser op het toestel.
+- De app bevat geen analytics, advertenties, accounts, bankkoppeling of cloudsync.
+- Hosting levert alleen de appbestanden. Zoals bij elke website kunnen hosting- en netwerklogs bestaan.
+- Lokale browseropslag is niet hetzelfde als een versleutelde kluis. Maak regelmatig een back-up en bescherm je iPhone.
+- Wis websitegegevens niet zonder eerst een back-up te maken.
+
+Publiceren:
+Deze bestanden kunnen op een HTTPS-statische host geplaatst worden, bijvoorbeeld GitHub Pages. Gebruik daarna Safari op de iPhone om de HTTPS-link te openen en kies Delen > Zet op beginscherm > Voeg toe.

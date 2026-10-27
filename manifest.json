@@ -1,0 +1,10 @@
+{
+  "name": "Mijn Uitgaven",
+  "short_name": "Uitgaven",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6f7",
+  "theme_color": "#082d3c",
+  "description": "Persoonlijke uitgaven lokaal op je toestel bijhouden."
+}
